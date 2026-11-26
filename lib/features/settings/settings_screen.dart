@@ -647,7 +647,7 @@ class _AboutCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  'Версия 1.0.0 · GPL-3.0\nСкачивайте только материалы, которые имеете право сохранять.',
+                  'Версия 1.0.1 · GPL-3.0\nСкачивайте только материалы, которые имеете право сохранять.',
                   style: Theme.of(context).textTheme.bodySmall
                       ?.copyWith(color: Colors.white.withValues(alpha: 0.64)),
                 ),

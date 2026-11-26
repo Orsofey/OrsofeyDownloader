@@ -27,8 +27,9 @@ if (Test-Path $propertiesPath) {
     }
     if ($existing.ContainsKey('storePassword')) {
         $existing['keyPassword'] = $existing['storePassword']
+        $currentKeystore = (Join-Path $root 'android\signing\release.jks').Replace('\', '/')
         $normalized = @(
-            'storeFile=' + $existing['storeFile'],
+            'storeFile=' + $currentKeystore,
             'storePassword=' + $existing['storePassword'],
             'keyAlias=' + $existing['keyAlias'],
             'keyPassword=' + $existing['keyPassword']

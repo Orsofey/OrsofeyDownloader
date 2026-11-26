@@ -38,6 +38,19 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int _index = 0;
+  int _handledNavigationRequest = 0;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final controller = AppScope.of(context);
+    if (controller.navigationRequest != _handledNavigationRequest) {
+      _handledNavigationRequest = controller.navigationRequest;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _index = 1);
+      });
+    }
+  }
 
   static const _destinations = [
     _Destination(

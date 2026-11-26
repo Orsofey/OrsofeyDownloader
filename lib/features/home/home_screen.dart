@@ -558,6 +558,7 @@ class _HomeScreenState extends State<HomeScreen> {
       subtitleLanguages: _subtitleController.text,
     );
     if (!mounted || created.isEmpty) return;
+    controller.openQueue();
     _linkController.clear();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

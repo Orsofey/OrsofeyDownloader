@@ -189,6 +189,7 @@ class YtDlpEngine implements DownloadEngine {
     final arguments = await _baseArguments();
     arguments.addAll([
       '--newline',
+      '--progress',
       '--continue',
       '--windows-filenames',
       '--trim-filenames',
@@ -246,6 +247,7 @@ class YtDlpEngine implements DownloadEngine {
     arguments.add(job.url);
 
     _stopping.remove(job.taskId);
+    final startedAt = DateTime.now();
     late final Process process;
     try {
       process = await Process.start(
@@ -294,11 +296,59 @@ class YtDlpEngine implements DownloadEngine {
       throw DownloadException(friendlyEngineError(details), details);
     }
     if (outputFile.isEmpty) {
+      outputFile = await _findNewestMediaFile(directory, startedAt, job.url);
+    }
+    if (outputFile.isEmpty) {
       throw const DownloadException(
         'Не удалось определить итоговый файл после загрузки',
       );
     }
     return outputFile;
+  }
+
+  Future<String> _findNewestMediaFile(
+    Directory directory,
+    DateTime startedAt,
+    String url,
+  ) async {
+    if (!await directory.exists()) return '';
+    final videoId = _videoIdFromUrl(url);
+    final candidates = directory.listSync().whereType<File>().where((file) {
+      final extension = file.path.toLowerCase();
+      if (!extension.endsWith('.mp4') &&
+          !extension.endsWith('.webm') &&
+          !extension.endsWith('.mkv') &&
+          !extension.endsWith('.mp3') &&
+          !extension.endsWith('.m4a')) {
+        return false;
+      }
+      if (file.lengthSync() == 0) return false;
+      if (videoId.isNotEmpty && !file.path.contains(videoId)) return false;
+      return true;
+    }).toList();
+    candidates.sort((a, b) {
+      final aIsNew = a.lastModifiedSync().isAfter(
+        startedAt.subtract(const Duration(seconds: 5)),
+      );
+      final bIsNew = b.lastModifiedSync().isAfter(
+        startedAt.subtract(const Duration(seconds: 5)),
+      );
+      if (aIsNew != bIsNew) return aIsNew ? -1 : 1;
+      return b.lastModifiedSync().compareTo(a.lastModifiedSync());
+    });
+    return candidates.isEmpty ? '' : candidates.first.path;
+  }
+
+  String _videoIdFromUrl(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return '';
+    final youtubeId = uri.queryParameters['v'];
+    if (youtubeId != null && youtubeId.isNotEmpty) return youtubeId;
+    final vkMatch = RegExp(r'(?:video|clip)(-?\d+_\d+)').firstMatch(url);
+    if (vkMatch != null) return vkMatch.group(1)!;
+    final tiktokMatch = RegExp(r'/(\d{8,})').firstMatch(uri.path);
+    if (tiktokMatch != null) return tiktokMatch.group(1)!;
+    return uri.pathSegments.isEmpty ? '' : uri.pathSegments.last;
   }
 
   @override
@@ -341,9 +391,8 @@ class YtDlpEngine implements DownloadEngine {
 
   String _formatSelector(int quality, String container) {
     final extension = container == 'webm' ? 'webm' : 'mp4';
-    final audioExtension = extension == 'webm' ? 'webm' : 'm4a';
     final height = quality > 0 ? '[height<=$quality]' : '';
-    return 'bestvideo$height[ext=$extension]+bestaudio[ext=$audioExtension]/'
+    return 'bestvideo$height[ext=$extension]+bestaudio[ext=webm]/bestaudio/'
         'best$height[ext=$extension]/'
         'bestvideo$height+bestaudio/best$height';
   }

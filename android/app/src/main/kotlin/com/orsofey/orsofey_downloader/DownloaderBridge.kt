@@ -221,6 +221,7 @@ class DownloaderBridge(
 
         val request = baseRequest(url)
             .addOption("--newline")
+            .addOption("--progress")
             .addOption("--continue")
             .addOption("--trim-filenames", 220)
             .addOption(
@@ -309,9 +310,8 @@ class DownloaderBridge(
 
     private fun formatSelector(quality: Int, container: String): String {
         val extension = if (container == "webm") "webm" else "mp4"
-        val audioExtension = if (extension == "webm") "webm" else "m4a"
         val height = if (quality > 0) "[height<=$quality]" else ""
-        return "bestvideo$height[ext=$extension]+bestaudio[ext=$audioExtension]/" +
+        return "bestvideo$height[ext=$extension]+bestaudio[ext=webm]/bestaudio/" +
             "best$height[ext=$extension]/" +
             "bestvideo$height+bestaudio/best$height"
     }

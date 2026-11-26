@@ -40,6 +40,7 @@ class AppController extends ChangeNotifier {
   bool updatingEngine = false;
   String? inspectError;
   String? actionMessage;
+  int navigationRequest = 0;
 
   int _activeCount = 0;
   int _taskCounter = 0;
@@ -417,6 +418,11 @@ class AppController extends ChangeNotifier {
       actionMessage = 'Не удалось открыть папку: $error';
       notifyListeners();
     }
+  }
+
+  void openQueue() {
+    navigationRequest++;
+    notifyListeners();
   }
 
   void consumeActionMessage() {

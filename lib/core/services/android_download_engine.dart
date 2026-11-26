@@ -180,6 +180,10 @@ String friendlyEngineError(String raw) {
   if (message.contains('unsupported url')) {
     return 'Эта ссылка пока не поддерживается движком.';
   }
+  if (message.contains('http error 503') ||
+      message.contains('service unavailable')) {
+    return 'Сервер временно отклонил загрузку (503). Повторите попытку или выберите другое качество.';
+  }
   if (message.contains('unavailable') || message.contains('not found')) {
     return 'Видео недоступно или было удалено.';
   }
